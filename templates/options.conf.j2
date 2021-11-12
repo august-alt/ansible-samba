@@ -8,14 +8,11 @@ options {
 
 		tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab";
 
-		//listen-on { localnets; {{ samba_network }}; };
 		forwarders { {{ samba_dns_forward }}; };
 		allow-query { localnets; {{ samba_network }}; };
-		//allow-query-cache { localnets; {{ samba_network }}; };
 		allow-recursion { localnets; {{ samba_network }}; };
 
 		max-cache-ttl 86400;
-		//interfaces-interval 0;
 };
 
 logging {

@@ -5,15 +5,21 @@
     when: item not in vars
     with_items: "{{ samba_dc_required_vars }}"
 
+  - name: update apt database
+    shell: "apt-get update"
+
+  - name: remove conflicting packages
+    apt_rpm: pkg=sysconfig-network state=absent
+
   - name: install openresolv and etcnet
     apt_rpm: pkg=openresolv,etcnet state=present
     register: openresolv_install
 
   - name: check if altlinux-openresolv service exists
-    command: service altlinux-openresolv status
+    command: systemctl status altlinux-openresolv
     register:
       altlinux_openresolv_status
-    failed_when: False
+    failed_when: false
 
   - set_fact:
       altlinux_openresolv_exists: "{{ altlinux_openresolv_status.rc != 3 }}"
@@ -32,6 +38,12 @@
     when: (samba_dc_common_packages | length > 0) and samba_flavor != 'client'
     notify: restart samba
 
+  - name: install samba-dc-mitkrb5 packages
+    shell: |
+      apt-get purge samba-dc
+      apt-get install -y {{ samba_dc_mitkrb5_common_packages | join(' ') }}
+    when: samba_dc_mitkrb5 | bool
+
   - name: create /etc/krb5.conf
     template:
       src: krb5.conf.j2
@@ -40,11 +52,33 @@
       group: root
       mode: 0644
 
+  - name: create dir for kdc.conf
+    file:
+      path: "/usr/local/samba/private"
+      state: directory
+
+  - name: create kdc.conf
+    template:
+      src: kdc.conf.j2
+      dest: /usr/local/samba/private/kdc.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: set short and long name of dc
+    set_fact:
+      dc_short_name: "dc{{groups['all'].index(inventory_hostname)}}"
+      dc_long_name: "dc{{groups['all'].index(inventory_hostname)}}.{{samba_realm}}"
+      default_gateway: "{{ ansible_eth0.ipv4.address.split('.')[0:3] | join('.') }}.1"
+      network_prefix: "{{ network | ansible.netcommon.ipaddr('prefix') }}"
+    vars:
+      network: "{{ ansible_eth0.ipv4.address }}/{{ ansible_eth0.ipv4.netmask }}"
+
   - name: set hostname
     shell: |
-      hostname "{{inventory_hostname_short}}.{{samba_realm}}"
-      sed -i "s/^HOSTNAME=.*/HOSTNAME={{inventory_hostname_short}}.{{samba_realm}}/" /etc/sysconfig/network
-      echo "{{inventory_hostname_short}}.{{samba_realm}}" >/etc/hostname
+      hostname "{{ dc_long_name }}"
+      sed -i "s/^HOSTNAME=.*/HOSTNAME={{ dc_long_name }}/" /etc/sysconfig/network
+      echo "{{ dc_long_name }}" >/etc/hostname
     changed_when: false
 
   - include: dns.yml
@@ -53,8 +87,8 @@
 
 - name: create openldap config directory
   file:
-   path: "/etc/openldap"
-   state: directory
+    path: "/etc/openldap"
+    state: directory
 
 - name: disable reverse dns for ldap requests
   template:

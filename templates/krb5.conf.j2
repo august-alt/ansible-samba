@@ -1,9 +1,4 @@
-#includedir /etc/krb5.conf.d/
-
 [logging]
-# default = FILE:/var/log/krb5libs.log
-# kdc = FILE:/var/log/krb5kdc.log
-# admin_server = FILE:/var/log/kadmind.log
 
 [libdefaults]
  dns_lookup_kdc = true
@@ -12,14 +7,12 @@
  renew_lifetime = 7d
  forwardable = true
  rdns = false
- default_realm = {{samba_realm|upper}}
-# default_ccache_name = KEYRING:persistent:%{uid}
+ default_realm = {{ samba_realm | upper }}
 
 [realms]
-# EXAMPLE.COM = {
-#  default_domain = example.com
-# }
+{{ samba_realm | upper }} = {
+  default_domain = {{ samba_realm | lower }}
+}
 
 [domain_realm]
-# .example.com = EXAMPLE.COM
-# example.com = EXAMPLE.COM
+{{ samba_realm | lower }} = {{ samba_realm | upper }}
