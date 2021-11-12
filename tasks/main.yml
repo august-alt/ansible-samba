@@ -5,6 +5,12 @@
     when: item not in vars
     with_items: "{{ samba_dc_required_vars }}"
 
+  - name: update apt database
+    shell: "apt-get update"
+
+  - name: remove conflicting packages
+    apt_rpm: pkg=sysconfig-network state=absent
+
   - name: install openresolv and etcnet
     apt_rpm: pkg=openresolv,etcnet state=present
     register: openresolv_install
@@ -26,9 +32,6 @@
   - name: start altlinux-openresolv
     service: name=altlinux-openresolv state=started
     when: altlinux_openresolv_exists|bool and openresolv_install.changed|bool
-
-  - name: update apt database
-    shell: "apt-get update"
 
   - name: install samba DC common packages
     shell: "apt-get install -y {{ samba_dc_common_packages | join(' ') }}"
@@ -53,21 +56,29 @@
     file:
       path: "/usr/local/samba/private"
       state: directory
-    #shell: "mkdir -p /usr/local/samba/private" # /var/lib/samba/private
 
   - name: create kdc.conf
     template:
       src: kdc.conf.j2
-      dest: /usr/local/samba/private/kdc.conf #/var/lib/samba/private/
+      dest: /usr/local/samba/private/kdc.conf
       owner: root
       group: root
       mode: 0644
 
+  - name: set short and long name of dc
+    set_fact:
+      dc_short_name: "dc{{groups['all'].index(inventory_hostname)}}"
+      dc_long_name: "dc{{groups['all'].index(inventory_hostname)}}.{{samba_realm}}"
+      default_gateway: "{{ ansible_eth0.ipv4.address.split('.')[0:3] | join('.') }}.1"
+      network_prefix: "{{ network | ansible.netcommon.ipaddr('prefix') }}"
+    vars:
+      network: "{{ ansible_eth0.ipv4.address }}/{{ ansible_eth0.ipv4.netmask }}"
+
   - name: set hostname
     shell: |
-      hostname "{{inventory_hostname_short}}.{{samba_realm}}"
-      sed -i "s/^HOSTNAME=.*/HOSTNAME={{inventory_hostname_short}}.{{samba_realm}}/" /etc/sysconfig/network
-      echo "{{inventory_hostname_short}}.{{samba_realm}}" >/etc/hostname
+      hostname "{{ dc_long_name }}"
+      sed -i "s/^HOSTNAME=.*/HOSTNAME={{ dc_long_name }}/" /etc/sysconfig/network
+      echo "{{ dc_long_name }}" >/etc/hostname
     changed_when: false
 
   - include: dns.yml

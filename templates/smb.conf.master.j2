@@ -1,13 +1,13 @@
 # Global parameters
 [global]
-	netbios name = {{inventory_hostname_short|upper}}
-	realm = {{samba_realm|upper}}
-	workgroup = {{samba_domain|upper}}
-	dns forwarder = {{samba_dns_forward}}
+	netbios name = {{ dc_short_name | upper }}
+	realm = {{ samba_realm | upper }}
+	workgroup = {{ samba_domain | upper }}
+	dns forwarder = {{ samba_dns_forward }}
 	server role = active directory domain controller
 	idmap_ldb:use rfc2307 = yes
 	bind interfaces only = yes
-	interfaces = lo {{samba_master_address}}
+	interfaces = lo eth0
 	kerberos method = dedicated keytab
 	dedicated keytab file = /etc/krb5.keytab
 	{% if samba_dns_backend != "SAMBA_INTERNAL" %}

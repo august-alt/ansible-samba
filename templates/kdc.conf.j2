@@ -4,25 +4,25 @@
        kadmind_port = 464
 
 [realms]
-       DC0.DOMAIN.ALT = {
+       DC0.{{ samba_realm | upper }} = {
        }
 
-       dc0.domain.alt = {
+       dc0.{{ samba_realm | lower }} = {
        }
 
        DC0 = {
-	}
+	   }
 
 [dbmodules]
        # Set the following parameter to the directory
        # that contains the samba.so database module:
        db_module_dir = /usr/lib64/krb5/plugins/kdb/
 
-       DC0.DOMAIN.ALT = {
+       DC0.{{ samba_realm | upper }} = {
                db_library = samba
        }
 
-       dc0.domain.alt = {
+       dc0.{{ samba_realm | lower }} = {
                db_library = samba
        }
 
