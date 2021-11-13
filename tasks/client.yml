@@ -41,6 +41,14 @@
 - set_fact:
     managed_by_etcnet: "{{ ifaces_eth0_st.stat.exists and ifaces_eth0_st.stat.isdir }}"
 
+- name: check if /etc/net/ifaces/eth0/options exists
+  stat: path=/etc/net/ifaces/eth0/options
+  register: ifaces_eth0_options_st
+  failed_when: false
+
+- set_fact:
+    options_exists: "{{ ifaces_eth0_options_st.stat.exists and ifaces_eth0_options_st.stat.isreg }}"
+
 - name: enable eth0 (etcnet)
   lineinfile:
     path: /etc/net/ifaces/eth0/options
@@ -50,7 +58,7 @@
     state: present
   register: net_conf_is
   changed_when: managed_by_etcnet|bool and net_conf_is.changed
-  when: managed_by_etcnet|bool
+  when: managed_by_etcnet|bool and options_exists|bool
   notify: restart network
 
 
