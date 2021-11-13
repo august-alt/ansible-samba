@@ -78,11 +78,9 @@
       network: "{{ ansible_eth0.ipv4.address }}/{{ ansible_eth0.ipv4.netmask }}"
 
   - name: set hostname
-    shell: |
-      hostname "{{ dc_long_name }}"
-      sed -i "s/^HOSTNAME=.*/HOSTNAME={{ dc_long_name }}/" /etc/sysconfig/network
-      echo "{{ dc_long_name }}" >/etc/hostname
-    changed_when: false
+    ansible.builtin.hostname:
+      name: "{{ dc_long_name }}"
+      use: systemd
 
   - include: dns.yml
 
