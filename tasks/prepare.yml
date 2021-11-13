@@ -1,6 +1,10 @@
 ---
 - name: remove conflict samba server packages
-  shell: "apt-get remove -y nss-ldapd nscd"
+  apt_rpm:
+    pkg:
+      - nss-ldapd
+      - nscd
+    state: absent
 
 - name: Stop BIND9 daemon
   service:

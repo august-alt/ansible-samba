@@ -15,7 +15,9 @@
   include_tasks: bind.yml
 
 - name: install samba master packages
-  shell: "apt-get install -y {{samba_dc_master_packages | join(' ')}}"
+  apt_rpm:
+    pkg: "{{ samba_dc_master_packages }}"
+    state: present
   when: samba_dc_master_packages | length > 0
   notify: restart samba
 

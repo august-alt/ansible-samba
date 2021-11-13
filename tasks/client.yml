@@ -73,7 +73,9 @@
   changed_when: false
 
 - name: install samba client packages
-  shell: "apt-get install -y {{ samba_cl_packages | join(' ') }}"
+  apt_rpm:
+    pkg: "{{ samba_cl_packages }}"
+    state: present
   when: samba_cl_packages | length > 0
 
 - name: create /etc/krb5.conf

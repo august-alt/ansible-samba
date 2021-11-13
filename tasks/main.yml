@@ -5,11 +5,8 @@
     when: item not in vars
     with_items: "{{ samba_dc_required_vars }}"
 
-  - name: update apt database
-    shell: "apt-get update"
-
-  - name: remove conflicting packages
-    apt_rpm: pkg=sysconfig-network state=absent
+  - name: remove conflicting packages and update the package database
+    apt_rpm: pkg=sysconfig-network state=absent update_cache=yes
 
   - name: install openresolv and etcnet
     apt_rpm: pkg=openresolv,etcnet state=present
@@ -34,14 +31,20 @@
     when: altlinux_openresolv_exists|bool and openresolv_install.changed|bool
 
   - name: install samba DC common packages
-    shell: "apt-get install -y {{ samba_dc_common_packages | join(' ') }}"
+    apt_rpm:
+      pkg: "{{ samba_dc_common_packages }}"
+      state: present
     when: (samba_dc_common_packages | length > 0) and samba_flavor != 'client'
     notify: restart samba
 
   - name: install samba-dc-mitkrb5 packages
-    shell: |
-      apt-get purge samba-dc
-      apt-get install -y {{ samba_dc_mitkrb5_common_packages | join(' ') }}
+    block:
+    - apt_rpm:
+        pkg: samba-dc
+        state: absent
+    - apt_rpm:
+        pkg: "{{ samba_dc_mitkrb5_common_packages }}"
+        state: present
     when: samba_dc_mitkrb5 | bool
 
   - name: create /etc/krb5.conf
