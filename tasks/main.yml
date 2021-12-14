@@ -70,8 +70,6 @@
 
   - name: set short and long name of dc
     set_fact:
-      dc_short_name: "dc{{groups['all'].index(inventory_hostname)}}"
-      dc_long_name: "dc{{groups['all'].index(inventory_hostname)}}.{{samba_realm}}"
       default_gateway: "{{ ansible_eth0.ipv4.address.split('.')[0:3] | join('.') }}.1"
       network_prefix: "{{ network | ansible.netcommon.ipaddr('prefix') }}"
     vars:
