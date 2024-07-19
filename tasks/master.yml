@@ -50,7 +50,7 @@
     - name: provision samba domain
       shell: |
         set -euo pipefail
-        service samba stop
+        systemctl stop samba
         rm -rf /var/lib/samba
         mkdir /var/lib/samba
         samba-tool domain provision --realm={{samba_realm|upper}} --domain={{samba_domain|upper}} --adminpass='{{samba_admin_pass}}' --dns-backend={{samba_dns_backend}} --backend-store={{samba_backend_store}} --server-role=dc --use-rfc2307 --host-ip={{samba_master_address}} --site={{ samba_site }}

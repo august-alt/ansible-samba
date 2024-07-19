@@ -60,9 +60,9 @@
   service: name=systemd-resolved state=restarted
   when: systemd_networkd_present.rc == 0
 
-- name: black magic
-  shell: update_chrooted all
-  changed_when: false
+#- name: black magic
+#  shell: update_chrooted all
+#  changed_when: false
 
 - name: restart network service
   service:

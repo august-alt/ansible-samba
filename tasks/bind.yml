@@ -1,6 +1,6 @@
 ---
-- name: Disable bind work in chroot
-  shell: control bind-chroot disabled
+#- name: Disable bind work in chroot
+#  shell: control bind-chroot disabled
 
 - name: Disable KRB5RCACHETYPE for bind
   shell: grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind
